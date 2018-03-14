@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using Microsoft.Build.Framework;
 
@@ -95,21 +96,47 @@ namespace ReplacingLogger
         {
             CancellationToken ct = (CancellationToken)obj;
 
+            Console.CursorVisible = false;
+
             int column = Console.CursorLeft;
             int row = Console.CursorTop;
+
+            int furthestColumn = Console.CursorLeft;
+            int furthestRow = Console.CursorTop;
 
             Console.WriteLine("Starting logger");
 
             while (!ct.IsCancellationRequested)
             {
-                Console.WriteLine($"======================== {(CompletedRequests == 0 ? 0f : (float)CompletedRequests / TotalRequests),3:#0%}");
+                column = Console.CursorLeft;
+                row = Console.CursorTop;
+
+                var startLine = new string(' ', Console.WindowWidth - 1).ToCharArray();
+
+                string initialLine = $"======================== {(CompletedRequests == 0 ? 0f : (float)CompletedRequests / TotalRequests),3:#0%}";
+                initialLine.CopyTo(0, startLine, 0, Math.Min(initialLine.Length, startLine.Length));
+
+                Console.WriteLine(startLine);
                 for (int i = 0; i < Nodes.Count; i++)
                 {
-                    Console.WriteLine($"{i:00}: {Nodes[i].Project} - {Nodes[i].Target}");
+                    var line = new string(' ', Console.WindowWidth - 1).ToCharArray();
+
+                    string logMessage = $"{i:00}: {Nodes[i].Project} - {Nodes[i].Target}";
+                    logMessage.CopyTo(0, line, 0, Math.Min(logMessage.Length, line.Length));
+
+                    Console.WriteLine(line);
                 }
+
+                furthestColumn = Console.CursorLeft;
+                furthestRow = Console.CursorTop;
+
+                Console.SetCursorPosition(column, row);
 
                 Thread.Sleep(ConsoleRedrawInterval);
             }
+
+            Console.SetCursorPosition(furthestColumn, furthestRow);
+            Console.CursorVisible = true;
         }
     }
 }
