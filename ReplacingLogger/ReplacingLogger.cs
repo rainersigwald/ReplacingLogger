@@ -15,6 +15,9 @@ namespace ReplacingLogger
         private CancellationTokenSource CancellationTokenSource;
         private int NodeCount = 1;
 
+        private uint TotalRequests = 0;
+        private uint CompletedRequests = 0;
+
         public LoggerVerbosity Verbosity
         {
             get => LoggerVerbosity.Minimal;
@@ -39,6 +42,9 @@ namespace ReplacingLogger
 
             CancellationTokenSource = new CancellationTokenSource();
 
+            eventSource.ProjectStarted += IncrementRequestCount;
+            eventSource.ProjectFinished += IncrementCompleted;
+
             eventSource.TargetStarted += TargetStartedHandler;
             eventSource.TargetFinished += TargetFinishedHandler;
 
@@ -47,6 +53,16 @@ namespace ReplacingLogger
                 Name = nameof(ReplacingLogger) + " logging thread"
             };
             loggingThread.Start(CancellationTokenSource.Token);
+        }
+
+        private void IncrementCompleted(object sender, ProjectFinishedEventArgs e)
+        {
+            CompletedRequests++;
+        }
+
+        private void IncrementRequestCount(object sender, ProjectStartedEventArgs e)
+        {
+            TotalRequests++;
         }
 
         private void TargetStartedHandler(object sender, TargetStartedEventArgs e)
@@ -86,10 +102,10 @@ namespace ReplacingLogger
 
             while (!ct.IsCancellationRequested)
             {
-                Console.WriteLine("========================");
+                Console.WriteLine($"======================== {(CompletedRequests == 0 ? 0f : (float)CompletedRequests / TotalRequests),3:#0%}");
                 for (int i = 0; i < Nodes.Count; i++)
                 {
-                    Console.WriteLine($"{i:G2}: {Nodes[i].Project} - {Nodes[i].Target}");
+                    Console.WriteLine($"{i:00}: {Nodes[i].Project} - {Nodes[i].Target}");
                 }
 
                 Thread.Sleep(ConsoleRedrawInterval);
