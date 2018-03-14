@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using Microsoft.Build.Framework;
 
@@ -9,8 +11,9 @@ namespace ReplacingLogger
         private static readonly TimeSpan ConsoleRedrawInterval = TimeSpan.FromSeconds(0.25);
 
         private Thread loggingThread;
+        private List<NodeState> Nodes;
         private CancellationTokenSource CancellationTokenSource;
-        private int NodeCount;
+        private int NodeCount = 1;
 
         public LoggerVerbosity Verbosity
         {
@@ -28,7 +31,16 @@ namespace ReplacingLogger
 
         public void Initialize(IEventSource eventSource)
         {
+            Nodes = new List<NodeState>(NodeCount + 1);
+            for (int i = 0; i <= NodeCount; i++)
+            {
+                Nodes.Add(new NodeState());
+            }
+
             CancellationTokenSource = new CancellationTokenSource();
+
+            eventSource.TargetStarted += TargetStartedHandler;
+            eventSource.TargetFinished += TargetFinishedHandler;
 
             loggingThread = new Thread(LoggingThreadProc)
             {
@@ -36,6 +48,23 @@ namespace ReplacingLogger
             };
             loggingThread.Start(CancellationTokenSource.Token);
         }
+
+        private void TargetStartedHandler(object sender, TargetStartedEventArgs e)
+        {
+            var node = Nodes[e.BuildEventContext.NodeId];
+
+            node.Project = e.ProjectFile;
+            node.Target = e.TargetName;
+        }
+
+        private void TargetFinishedHandler(object sender, TargetFinishedEventArgs e)
+        {
+            var node = Nodes[e.BuildEventContext.NodeId];
+
+            node.Project = string.Empty;
+            node.Target = string.Empty;
+        }
+
 
         public void Shutdown()
         {
@@ -53,10 +82,15 @@ namespace ReplacingLogger
             int column = Console.CursorLeft;
             int row = Console.CursorTop;
 
-            System.Console.WriteLine("Starting logger");
+            Console.WriteLine("Starting logger");
 
             while (!ct.IsCancellationRequested)
             {
+                Console.WriteLine("========================");
+                for (int i = 0; i < Nodes.Count; i++)
+                {
+                    Console.WriteLine($"{i:G2}: {Nodes[i].Project} - {Nodes[i].Target}");
+                }
 
                 Thread.Sleep(ConsoleRedrawInterval);
             }
