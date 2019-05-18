@@ -91,11 +91,41 @@ namespace ReplacingLogger
 
         private void Disambiguate(List<Project> list)
         {
-            int i = 0;
+            int totalProjects = list.Count;
+
+            var d = new ConcurrentDictionary<string, List<Project>>();
             foreach (var project in list)
             {
-                i++;
-                project.Disambiguator = i.ToString();
+                // clear current disambiguation; it's completely recalculated
+                project.Disambiguator = string.Empty;
+
+                foreach (var property in project.GlobalProperties)
+                {
+                    d.AddOrUpdate(property,
+                        (_) => new List<Project> { project },
+                        (_, projects) =>
+                          {
+                              projects.Add(project);
+                              return projects;
+                          });
+                }
+            }
+
+            var disambiguatingProperties = new List<string>();
+
+            foreach (var globalProperty in d)
+            {
+                var propertyString = globalProperty.Key;
+                var projectsWithThatProperty = globalProperty.Value;
+
+                if (projectsWithThatProperty.Count != totalProjects)
+                {
+                    disambiguatingProperties.Add(propertyString);
+                    foreach (var p in projectsWithThatProperty)
+                    {
+                        p.Disambiguator += propertyString;
+                    }
+                }
             }
         }
 
