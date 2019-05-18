@@ -8,6 +8,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Build.Framework" Version="15.6.82" ExcludeAssets="runtime" />
     <PackageReference Include="System.CommandLine.Rendering" Version="0.2.0-alpha.19261.4" />
+    <PackageReference Include="System.Reactive.Core" Version="4.1.1" />
   </ItemGroup>
 
 </Project>
