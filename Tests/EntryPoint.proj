@@ -1,0 +1,23 @@
+<Project DefaultTargets="Build">
+ <ItemGroup>
+  <ProjectReference Include="Delay.proj" AdditionalProperties="DelayTime=1" />
+  <ProjectReference Include="Delay.proj" AdditionalProperties="DelayTime=2" />
+  <ProjectReference Include="Delay.proj" AdditionalProperties="DelayTime=3" />
+ </ItemGroup>
+
+ <Target Name="ResolveProjectReferences">
+  <MSBuild Projects="@(ProjectReference)"
+           Targets="GetTargetFrameworks"
+           BuildInParallel="true" />
+  <MSBuild Projects="@(ProjectReference)"
+           BuildInParallel="true" />
+ </Target>
+
+ <Target Name="Link"
+         DependsOnTargets="ResolveProjectReferences">
+  <Exec Command="pwsh -command sleep 1" />
+ </Target>
+
+ <Target Name="Build"
+         DependsOnTargets="ResolveProjectReferences;Link" />
+</Project>
