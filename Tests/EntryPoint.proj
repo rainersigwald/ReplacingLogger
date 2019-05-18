@@ -1,8 +1,11 @@
 <Project DefaultTargets="Build">
  <ItemGroup>
+  <ProjectReference Include="Project.proj" AdditionalProperties="UninterestingProperty=x" />
   <ProjectReference Include="Delay.proj" AdditionalProperties="DelayTime=1" />
   <ProjectReference Include="Delay.proj" AdditionalProperties="DelayTime=2" />
   <ProjectReference Include="Delay.proj" AdditionalProperties="DelayTime=3" />
+  <ProjectReference Include="Delay.proj" AdditionalProperties="DelayTime=3.5" />
+  <ProjectReference Include="Delay.proj" AdditionalProperties="DelayTime=4" />
  </ItemGroup>
 
  <Target Name="ResolveProjectReferences">
