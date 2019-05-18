@@ -1,0 +1,8 @@
+<Project>
+ <Target Name="Delay">
+  <Exec Command="pwsh -command sleep 2" />
+  <Warning Text="Warning from $(MSBuildProject)" />
+ </Target>
+
+ <Target Name="GetTargetFrameworks" />
+</Project>
