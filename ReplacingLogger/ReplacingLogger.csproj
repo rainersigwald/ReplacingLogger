@@ -7,12 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Build.Framework" Version="15.6.82" ExcludeAssets="runtime" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="System.CommandLine.Rendering">
-      <HintPath>..\..\command-line-api\artifacts\bin\System.CommandLine.Rendering\Debug\netstandard2.0\System.CommandLine.Rendering.dll</HintPath>
-    </Reference>
+    <PackageReference Include="System.CommandLine.Rendering" Version="0.2.0-alpha.19261.4" />
   </ItemGroup>
 
 </Project>

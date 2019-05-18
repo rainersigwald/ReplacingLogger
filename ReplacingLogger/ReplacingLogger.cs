@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.CommandLine;
+using System.CommandLine.Rendering;
+using System.CommandLine.Rendering.Views;
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -197,29 +201,24 @@ namespace ReplacingLogger
             {
                 FlushWarningsErrorsAndMessages();
 
-                column = Console.CursorLeft;
-                row = Console.CursorTop;
-
-                var startLine = new string(' ', Console.WindowWidth - 1).ToCharArray();
-
-                string initialLine = $"======================== {(CompletedRequests == 0 ? 0f : (float)CompletedRequests / TotalRequests),3:#0%}";
-                initialLine.CopyTo(0, startLine, 0, Math.Min(initialLine.Length, startLine.Length));
-
-                Console.WriteLine(startLine);
-                for (int i = 1; i < Nodes.Count; i++)
+                var table = new TableView<NodeState>
                 {
-                    var line = new string(' ', Console.WindowWidth - 1).ToCharArray();
+                    Items = Nodes
+                };
+                table.AddColumn(node => $"{node.Project} ", "Project");
+                table.AddColumn(node => $"{node.Target}", "Target");
 
-                    string logMessage = $"{i:00}: {Nodes[i].Project} - {Nodes[i].Target}";
-                    logMessage.CopyTo(0, line, 0, Math.Min(logMessage.Length, line.Length));
+                SystemConsoleTerminal terminal = new SystemConsoleTerminal(new SystemConsole());
+                terminal.Clear();
+                var screen = new ScreenView(
+                    new ConsoleRenderer(terminal,
+                                        mode: OutputMode.Auto,
+                                        resetAfterRender: true))
+                {
+                    Child = table
+                };
 
-                    Console.WriteLine(line);
-                }
-
-                furthestColumn = Console.CursorLeft;
-                furthestRow = Console.CursorTop;
-
-                Console.SetCursorPosition(column, row);
+                screen.Render();
 
                 Thread.Sleep(ConsoleRedrawInterval);
             }
