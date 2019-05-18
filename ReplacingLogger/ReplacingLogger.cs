@@ -117,7 +117,7 @@ namespace ReplacingLogger
                 initialLine.CopyTo(0, startLine, 0, Math.Min(initialLine.Length, startLine.Length));
 
                 Console.WriteLine(startLine);
-                for (int i = 0; i < Nodes.Count; i++)
+                for (int i = 1; i < Nodes.Count; i++)
                 {
                     var line = new string(' ', Console.WindowWidth - 1).ToCharArray();
 
