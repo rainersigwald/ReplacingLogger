@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using Microsoft.Build.Framework;
@@ -15,6 +16,9 @@ namespace ReplacingLogger
         private List<NodeState> Nodes;
         private Dictionary<int, Project> ProjectsById;
         private ConcurrentDictionary<string, List<Project>> ProjectsByPath;
+
+        private ConcurrentQueue<string> Messages = new ConcurrentQueue<string>();
+
         private CancellationTokenSource CancellationTokenSource;
         private int NodeCount = 1;
 
@@ -54,11 +58,33 @@ namespace ReplacingLogger
             eventSource.TargetStarted += TargetStartedHandler;
             eventSource.TargetFinished += TargetFinishedHandler;
 
+            eventSource.MessageRaised += MessageRaisedHandler;
+            eventSource.WarningRaised += WarningRaisedHandler;
+            eventSource.ErrorRaised += ErrorRaisedHandler;
+
             loggingThread = new Thread(LoggingThreadProc)
             {
                 Name = nameof(ReplacingLogger) + " logging thread"
             };
             loggingThread.Start(CancellationTokenSource.Token);
+        }
+
+        private void ErrorRaisedHandler(object sender, BuildErrorEventArgs e)
+        {
+            Messages.Enqueue(e.Message);
+        }
+
+        private void MessageRaisedHandler(object sender, BuildMessageEventArgs e)
+        {
+            if (e.Importance == MessageImportance.High)
+            {
+                Messages.Enqueue(e.Message);
+            }
+        }
+
+        private void WarningRaisedHandler(object sender, BuildWarningEventArgs e)
+        {
+            Messages.Enqueue(e.Message);
         }
 
         private void IncrementCompleted(object sender, ProjectFinishedEventArgs e)
@@ -169,6 +195,8 @@ namespace ReplacingLogger
 
             while (!ct.IsCancellationRequested)
             {
+                FlushWarningsErrorsAndMessages();
+
                 column = Console.CursorLeft;
                 row = Console.CursorTop;
 
@@ -198,6 +226,28 @@ namespace ReplacingLogger
 
             Console.SetCursorPosition(furthestColumn, furthestRow);
             Console.CursorVisible = true;
+        }
+
+        private void FlushWarningsErrorsAndMessages()
+        {
+            while (Messages.TryDequeue(out string message))
+            {
+                Console.WriteLine(CoerceToConsoleWidth(message));
+            }
+        }
+
+        private string CoerceToConsoleWidth(string message)
+        {
+            int desiredWidth = Console.WindowWidth;
+
+            if (message.Length > desiredWidth)
+            {
+                return message.Substring(0, desiredWidth);
+            }
+
+            const string spaces = "                                                                                                                                                                                             ";
+
+            return $"{message}" + spaces.Substring(0, desiredWidth - message.Length - 3);
         }
     }
 }
