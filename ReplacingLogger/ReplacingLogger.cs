@@ -75,8 +75,6 @@ namespace ReplacingLogger
                 var p = new Project(e);
                 ProjectsById[e.BuildEventContext.ProjectInstanceId] = p;
 
-                Console.WriteLine($"{e.BuildEventContext.ProjectInstanceId}, {e.ProjectFile} started ");
-
                 var list = ProjectsByPath.GetOrAdd(e.ProjectFile,
                                                    (_) => new List<Project>());
 
