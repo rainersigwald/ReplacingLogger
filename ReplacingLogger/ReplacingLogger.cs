@@ -13,6 +13,8 @@ namespace ReplacingLogger
 
         private Thread loggingThread;
         private List<NodeState> Nodes;
+        private Dictionary<int, Project> ProjectsById;
+        private ConcurrentDictionary<string, List<Project>> ProjectsByPath;
         private CancellationTokenSource CancellationTokenSource;
         private int NodeCount = 1;
 
@@ -41,9 +43,12 @@ namespace ReplacingLogger
                 Nodes.Add(new NodeState());
             }
 
+            ProjectsById = new Dictionary<int, Project>();
+            ProjectsByPath = new ConcurrentDictionary<string, List<Project>>();
+
             CancellationTokenSource = new CancellationTokenSource();
 
-            eventSource.ProjectStarted += IncrementRequestCount;
+            eventSource.ProjectStarted += ProjectStartedHandler;
             eventSource.ProjectFinished += IncrementCompleted;
 
             eventSource.TargetStarted += TargetStartedHandler;
@@ -61,16 +66,44 @@ namespace ReplacingLogger
             CompletedRequests++;
         }
 
-        private void IncrementRequestCount(object sender, ProjectStartedEventArgs e)
+        private void ProjectStartedHandler(object sender, ProjectStartedEventArgs e)
         {
             TotalRequests++;
+
+            if (!ProjectsById.ContainsKey(e.BuildEventContext.ProjectInstanceId))
+            {
+                var p = new Project(e);
+                ProjectsById[e.BuildEventContext.ProjectInstanceId] = p;
+
+                Console.WriteLine($"{e.BuildEventContext.ProjectInstanceId}, {e.ProjectFile} started ");
+
+                var list = ProjectsByPath.GetOrAdd(e.ProjectFile,
+                                                   (_) => new List<Project>());
+
+                list.Add(p);
+
+                if (list.Count > 1)
+                {
+                    Disambiguate(list);
+                }
+            }
+        }
+
+        private void Disambiguate(List<Project> list)
+        {
+            int i = 0;
+            foreach (var project in list)
+            {
+                i++;
+                project.Disambiguator = i.ToString();
+            }
         }
 
         private void TargetStartedHandler(object sender, TargetStartedEventArgs e)
         {
             var node = Nodes[e.BuildEventContext.NodeId];
 
-            node.Project = e.ProjectFile;
+            node.Project = e.ProjectFile + ProjectsById[e.BuildEventContext.ProjectInstanceId].Disambiguator;
             node.Target = e.TargetName;
         }
 
