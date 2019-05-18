@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -7,7 +7,12 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Build.Framework" Version="15.6.82" ExcludeAssets="runtime" />
-    <PackageReference Include="System.Commandline.Experimental" Version="0.2.0-alpha.19261.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.CommandLine.Rendering">
+      <HintPath>..\..\command-line-api\artifacts\bin\System.CommandLine.Rendering\Debug\netstandard2.0\System.CommandLine.Rendering.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>
