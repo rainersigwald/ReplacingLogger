@@ -97,7 +97,7 @@ namespace ReplacingLogger
             foreach (var project in list)
             {
                 // clear current disambiguation; it's completely recalculated
-                project.Disambiguator = string.Empty;
+                project.Disambiguations.Clear();
 
                 foreach (var property in project.GlobalProperties)
                 {
@@ -123,7 +123,7 @@ namespace ReplacingLogger
                     disambiguatingProperties.Add(propertyString);
                     foreach (var p in projectsWithThatProperty)
                     {
-                        p.Disambiguator += propertyString;
+                        p.Disambiguations.Add(propertyString);
                     }
                 }
             }
