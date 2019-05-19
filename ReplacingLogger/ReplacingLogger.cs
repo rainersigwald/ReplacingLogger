@@ -197,34 +197,29 @@ namespace ReplacingLogger
 
             Console.WriteLine("Starting logger");
 
+            var table = new TableView<NodeState>
+            {
+                Items = Nodes
+            };
+            table.AddColumn(node => ContentView.FromObservable(node.Observe(), x => $"{x.Project}"), "Project", ColumnDefinition.Star(1));
+            table.AddColumn(node => ContentView.FromObservable(node.Observe(), x => $"{x.Target}"), "Target", ColumnDefinition.Star(1));
+
+            SystemConsoleTerminal terminal = new SystemConsoleTerminal(new SystemConsole());
+            terminal.Clear();
+            var screen = new ScreenView(
+                new ConsoleRenderer(terminal,
+                                    mode: OutputMode.Auto,
+                                    resetAfterRender: true))
+            {
+                Child = table
+            };
+
+            screen.Render();
+
             while (!ct.IsCancellationRequested)
             {
-                FlushWarningsErrorsAndMessages();
-
-                var table = new TableView<NodeState>
-                {
-                    Items = Nodes
-                };
-                table.AddColumn(node => $"{node.Project} ", "Project");
-                table.AddColumn(node => $"{node.Target}", "Target");
-
-                SystemConsoleTerminal terminal = new SystemConsoleTerminal(new SystemConsole());
-                terminal.Clear();
-                var screen = new ScreenView(
-                    new ConsoleRenderer(terminal,
-                                        mode: OutputMode.Auto,
-                                        resetAfterRender: true))
-                {
-                    Child = table
-                };
-
-                screen.Render();
-
-                Thread.Sleep(ConsoleRedrawInterval);
+                //FlushWarningsErrorsAndMessages();
             }
-
-            Console.SetCursorPosition(furthestColumn, furthestRow);
-            Console.CursorVisible = true;
         }
 
         private void FlushWarningsErrorsAndMessages()
