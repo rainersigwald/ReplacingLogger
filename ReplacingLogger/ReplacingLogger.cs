@@ -5,6 +5,8 @@ using System.CommandLine;
 using System.CommandLine.Rendering;
 using System.CommandLine.Rendering.Views;
 using System.Globalization;
+using System.Linq;
+using System.Reactive.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -21,7 +23,7 @@ namespace ReplacingLogger
         private Dictionary<int, Project> ProjectsById;
         private ConcurrentDictionary<string, List<Project>> ProjectsByPath;
 
-        private ConcurrentQueue<string> Messages = new ConcurrentQueue<string>();
+        private List<string> Messages = new List<string>();
 
         private CancellationTokenSource CancellationTokenSource;
         private int NodeCount = 1;
@@ -75,20 +77,20 @@ namespace ReplacingLogger
 
         private void ErrorRaisedHandler(object sender, BuildErrorEventArgs e)
         {
-            Messages.Enqueue(e.Message);
+            Messages.Add(e.Message);
         }
 
         private void MessageRaisedHandler(object sender, BuildMessageEventArgs e)
         {
             if (e.Importance == MessageImportance.High)
             {
-                Messages.Enqueue(e.Message);
+                Messages.Add(e.Message);
             }
         }
 
         private void WarningRaisedHandler(object sender, BuildWarningEventArgs e)
         {
-            Messages.Enqueue(e.Message);
+            Messages.Add(e.Message);
         }
 
         private void IncrementCompleted(object sender, ProjectFinishedEventArgs e)
@@ -205,7 +207,7 @@ namespace ReplacingLogger
             table.AddColumn(node => ContentView.FromObservable(node.Observe(), x => $"{x.Target}"), "Target", ColumnDefinition.Star(1));
 
             SystemConsoleTerminal terminal = new SystemConsoleTerminal(new SystemConsole());
-            terminal.Clear();
+            //terminal.Clear();
             var screen = new ScreenView(
                 new ConsoleRenderer(terminal,
                                     mode: OutputMode.Auto,
@@ -214,34 +216,35 @@ namespace ReplacingLogger
                 Child = table
             };
 
+            var grid = new GridView();
+
+            int logHeight = Console.WindowHeight - NodeCount - 3;
+            grid.SetRows(
+                RowDefinition.Fixed(logHeight),
+                RowDefinition.Fixed(NodeCount + 1));
+
+            grid.SetChild(ContentView.FromObservable(ObserveMessages(logHeight)), column: 0, row: 0);
+            //grid.SetChild(new ContentView("0,0"), 0, 0);
+            grid.SetChild(table, column: 0, row: 1);
+            //grid.SetChild(new ContentView("0,1"), 0, 1);
+
+            screen.Child = grid;
             screen.Render();
 
             while (!ct.IsCancellationRequested)
             {
                 //FlushWarningsErrorsAndMessages();
             }
-        }
 
-        private void FlushWarningsErrorsAndMessages()
-        {
-            while (Messages.TryDequeue(out string message))
+            IObservable<string> ObserveMessages(int desired)
             {
-                Console.WriteLine(CoerceToConsoleWidth(message));
+                return Observable.ToObservable(GetTime()).Delay(TimeSpan.FromMilliseconds(50)).Repeat();
+
+                IEnumerable<string> GetTime()
+                {
+                    yield return string.Join(Environment.NewLine, Messages.Skip(Math.Max(0, Messages.Count - desired)).ToList());
+                }
             }
-        }
-
-        private string CoerceToConsoleWidth(string message)
-        {
-            int desiredWidth = Console.WindowWidth;
-
-            if (message.Length > desiredWidth)
-            {
-                return message.Substring(0, desiredWidth);
-            }
-
-            const string spaces = "                                                                                                                                                                                             ";
-
-            return $"{message}" + spaces.Substring(0, desiredWidth - message.Length - 3);
         }
     }
 }

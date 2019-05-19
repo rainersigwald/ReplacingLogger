@@ -1,3 +1,25 @@
 # Observable that is a more complex object / row that's a single Observable
 
 # use the alternate thing that goes away on process exit?
+
+# gridview doesn't make any sense.
+* Is SetRows creating rows, or columns (by defining what makes up a row)?
+Why doesn't this work?
+
+```c#
+            var grid = new GridView();
+
+            grid.SetRows(
+                RowDefinition.Star(1),
+                RowDefinition.Fixed(10));
+
+            grid.SetChild(new ContentView("0,0"), 0, 0);
+            grid.SetChild(new ContentView("0,1"), 0, 1);
+
+            screen.Child = grid;
+            screen.Render();
+```
+
+# I want size constraints in StackView
+
+# how do I get formatted text out of an Observable?
