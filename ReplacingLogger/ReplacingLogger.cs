@@ -158,6 +158,8 @@ namespace ReplacingLogger
             var node = Nodes[e.BuildEventContext.NodeId];
 
             node.Project = e.ProjectFile + ProjectsById[e.BuildEventContext.ProjectInstanceId].Disambiguator;
+            node.Path = e.ProjectFile;
+            node.Disambiguator = ProjectsById[e.BuildEventContext.ProjectInstanceId].Disambiguator;
             node.Target = e.TargetName;
         }
 
@@ -220,11 +222,9 @@ namespace ReplacingLogger
                     {
                         for (int i = 0; i < NodeCount; i++)
                         {
-                            var x = table.Rows[i][0];
-
                             var l = (List<IRenderable>)f.GetValue(table.Rows[i]);
 
-                            l[1] = new Markup(Nodes[i].Project);
+                            l[1] = Nodes[i].ToRenderable();
                             l[2] = new Markup(Nodes[i].Target);
                         }
 
