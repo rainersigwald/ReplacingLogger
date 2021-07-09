@@ -144,6 +144,10 @@ namespace ReplacingLogger
 
                 if (projectsWithThatProperty.Count != totalProjects)
                 {
+                    if (propertyString.StartsWith("TargetFramework="))
+                    {
+                        propertyString = $"[deepskyblue4]{propertyString.Substring(16)}[/]"; // length of TargetFramework=
+                    }
                     disambiguatingProperties.Add(propertyString);
                     foreach (var p in projectsWithThatProperty)
                     {
