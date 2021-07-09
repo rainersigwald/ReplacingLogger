@@ -209,7 +209,9 @@ namespace ReplacingLogger
 
                     table.ShowHeaders = false;
 
-                    table.Columns[1].RightAligned();
+                    table.Columns[1].RightAligned().NoWrap();
+                    table.Columns[2].NoWrap();
+                    table.Columns[3].NoWrap();
 
                     for (int i = 0; i < NodeCount; i++)
                     {
