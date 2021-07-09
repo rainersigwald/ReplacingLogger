@@ -42,7 +42,7 @@ namespace ReplacingLogger
                     return Empty;
                 }
 
-                return new Markup(Disambiguator);
+                return new Markup($"[italic][deepskyblue4]{Disambiguator}[/][/]");
             }
         }
 
