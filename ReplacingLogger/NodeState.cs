@@ -5,7 +5,7 @@ namespace ReplacingLogger
 {
     internal class NodeState
     {
-        public string Project;
-        public string Target;
+        public string Project = string.Empty;
+        public string Target = string.Empty;
     }
 }

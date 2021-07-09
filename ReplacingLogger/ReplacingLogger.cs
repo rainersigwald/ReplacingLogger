@@ -3,6 +3,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using Microsoft.Build.Framework;
+using Spectre.Console;
+using Spectre.Console.Rendering;
 
 namespace ReplacingLogger
 {
@@ -190,6 +192,46 @@ namespace ReplacingLogger
             int furthestRow = Console.CursorTop;
 
             Console.WriteLine("Starting logger");
+
+            var table = new Table().LeftAligned();
+
+            AnsiConsole.Live(table)
+                .AutoClear(false)   // Do not remove when done
+                .Overflow(VerticalOverflow.Ellipsis) // Show ellipsis when overflowing
+                .Cropping(VerticalOverflowCropping.Top) // Crop overflow at top
+                .Start(ctx =>
+                {
+                    table.AddColumn("Node");
+                    table.AddColumn("Project");
+                    table.AddColumn("Target");
+
+                    table.Columns[0].RightAligned();
+
+
+                    for (int i = 0; i < NodeCount; i++)
+                    {
+                        table.AddRow((i + 1).ToString(), Nodes[i].Project, Nodes[i].Target);
+                    }
+                    ctx.Refresh();
+
+                    var f = typeof(TableRow).GetField("_items", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+
+                    while (!ct.IsCancellationRequested)
+                    {
+                        for (int i = 0; i < NodeCount; i++)
+                        {
+                            var x = table.Rows[i][0];
+
+                            var l = (List<IRenderable>)f.GetValue(table.Rows[i]);
+
+                            l[1] = new Markup(Nodes[i].Project);
+                            l[2] = new Markup(Nodes[i].Target);
+                        }
+
+                        ctx.Refresh();
+                    }
+
+                });
 
         }
     }
