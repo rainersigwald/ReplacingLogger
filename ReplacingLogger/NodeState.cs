@@ -25,10 +25,11 @@ namespace ReplacingLogger
                 {
                     return Empty;
                 }
-                string filename = GetFileName(Path);
+                string filename = GetFileNameWithoutExtension(Path);
+                string extension = GetExtension(Path);
                 string directory = GetDirectoryName(Path);
 
-                return new Markup($"{directory}{System.IO.Path.DirectorySeparatorChar}[bold]{filename}[/]");
+                return new Markup($"{directory}{System.IO.Path.DirectorySeparatorChar}[bold]{filename}[/]{extension}");
             }
         }
 
