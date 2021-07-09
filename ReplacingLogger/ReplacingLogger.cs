@@ -1,14 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.Rendering;
-using System.CommandLine.Rendering.Views;
-using System.Globalization;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 using Microsoft.Build.Framework;
 
@@ -199,52 +191,6 @@ namespace ReplacingLogger
 
             Console.WriteLine("Starting logger");
 
-            var table = new TableView<NodeState>
-            {
-                Items = Nodes
-            };
-            table.AddColumn(node => ContentView.FromObservable(node.Observe(), x => $"{x.Project}"), "Project", ColumnDefinition.Star(1));
-            table.AddColumn(node => ContentView.FromObservable(node.Observe(), x => $"{x.Target}"), "Target", ColumnDefinition.Star(1));
-
-            SystemConsoleTerminal terminal = new SystemConsoleTerminal(new SystemConsole());
-            //terminal.Clear();
-            var screen = new ScreenView(
-                new ConsoleRenderer(terminal,
-                                    mode: OutputMode.Auto,
-                                    resetAfterRender: true))
-            {
-                Child = table
-            };
-
-            var grid = new GridView();
-
-            int logHeight = Console.WindowHeight - NodeCount - 3;
-            grid.SetRows(
-                RowDefinition.Fixed(logHeight),
-                RowDefinition.Fixed(NodeCount + 1));
-
-            grid.SetChild(ContentView.FromObservable(ObserveMessages(logHeight)), column: 0, row: 0);
-            //grid.SetChild(new ContentView("0,0"), 0, 0);
-            grid.SetChild(table, column: 0, row: 1);
-            //grid.SetChild(new ContentView("0,1"), 0, 1);
-
-            screen.Child = grid;
-            screen.Render();
-
-            while (!ct.IsCancellationRequested)
-            {
-                //FlushWarningsErrorsAndMessages();
-            }
-
-            IObservable<string> ObserveMessages(int desired)
-            {
-                return Observable.ToObservable(GetTime()).Delay(TimeSpan.FromMilliseconds(50)).Repeat();
-
-                IEnumerable<string> GetTime()
-                {
-                    yield return string.Join(Environment.NewLine, Messages.Skip(Math.Max(0, Messages.Count - desired)).ToList());
-                }
-            }
         }
     }
 }
