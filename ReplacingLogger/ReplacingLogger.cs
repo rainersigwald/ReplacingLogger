@@ -195,20 +195,21 @@ namespace ReplacingLogger
 
             Console.WriteLine("Starting logger");
 
-            var table = new Table().LeftAligned();
+            var table = new Table().LeftAligned().NoBorder();
 
             AnsiConsole.Live(table)
-                .AutoClear(false)   // Do not remove when done
                 .Overflow(VerticalOverflow.Ellipsis) // Show ellipsis when overflowing
-                .Cropping(VerticalOverflowCropping.Top) // Crop overflow at top
+                .Cropping(VerticalOverflowCropping.Bottom)
                 .Start(ctx =>
                 {
                     table.AddColumn("Node");
                     table.AddColumn("Project");
+                    table.AddColumn("Disambiguator");
                     table.AddColumn("Target");
 
-                    table.Columns[0].RightAligned();
+                    table.ShowHeaders = false;
 
+                    table.Columns[1].RightAligned();
 
                     for (int i = 0; i < NodeCount; i++)
                     {
@@ -224,8 +225,9 @@ namespace ReplacingLogger
                         {
                             var l = (List<IRenderable>)f.GetValue(table.Rows[i]);
 
-                            l[1] = Nodes[i].ToRenderable();
-                            l[2] = new Markup(Nodes[i].Target);
+                            l[1] = Nodes[i].RenderablePath;
+                            l[2] = Nodes[i].RenderableDisambiguator;
+                            l[3] = new Markup(Nodes[i].Target);
                         }
 
                         ctx.Refresh();

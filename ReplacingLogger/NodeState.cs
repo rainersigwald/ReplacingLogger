@@ -9,22 +9,41 @@ namespace ReplacingLogger
 {
     internal class NodeState
     {
+        private static IRenderable Empty = new Markup(string.Empty);
+
         public string Project = string.Empty;
 
         public string Path = string.Empty;
         public string Disambiguator = string.Empty;
         public string Target = string.Empty;
 
-        public IRenderable ToRenderable()
+        public IRenderable RenderablePath
         {
-            if (string.IsNullOrEmpty(Project))
+            get
             {
-                return new Markup(string.Empty);
-            }
-            string filename = GetFileName(Path);
-            string directory = GetDirectoryName(Path);
+                if (string.IsNullOrEmpty(Project))
+                {
+                    return Empty;
+                }
+                string filename = GetFileName(Path);
+                string directory = GetDirectoryName(Path);
 
-            return new Markup($"{directory}{System.IO.Path.DirectorySeparatorChar}[bold]{filename}[/] {Disambiguator}");
+                return new Markup($"{directory}{System.IO.Path.DirectorySeparatorChar}[bold]{filename}[/]");
+            }
         }
+
+        public IRenderable RenderableDisambiguator
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(Project))
+                {
+                    return Empty;
+                }
+
+                return new Markup(Disambiguator);
+            }
+        }
+
     }
 }

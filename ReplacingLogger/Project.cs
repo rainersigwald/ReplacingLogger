@@ -6,7 +6,7 @@ namespace ReplacingLogger
 {
     internal class Project
     {
-        public string Disambiguator => Disambiguations.Any() ? $" ({string.Join(", ", Disambiguations)})" : string.Empty;
+        public string Disambiguator => Disambiguations.Any() ? string.Join(", ", Disambiguations) : string.Empty;
 
         public readonly List<string> Disambiguations = new List<string>();
 
